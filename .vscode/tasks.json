@@ -1,0 +1,45 @@
+{
+    "version": "2.0.0",
+    "options": {
+        "cwd": "${workspaceFolder}/CLI"
+    },
+    "type": "process",
+    "tasks": [
+        {
+            "label": "debug",
+            "command": "make",
+            "args": [
+                "CC=clang",
+                "CXX=clang++",
+                "DEBUG=y"
+            ],
+            "problemMatcher": {
+                "base": "$gcc",
+                "owner": "cpp",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/CLI"
+                ]
+            },
+            "group": "build"
+        },
+        {
+            "label": "release",
+            "command": "make",
+            "args": [
+                "CC=clang",
+                "CXX=clang++",
+                "DEBUG=n"
+            ],
+            "problemMatcher": {
+                "base": "$gcc",
+                "owner": "cpp",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/CLI"
+                ]
+            },
+            "group": "build"
+        }
+    ]
+}
