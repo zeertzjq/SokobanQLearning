@@ -24,6 +24,7 @@ namespace Sokoban {
     constexpr DirectionInt Left = 0b0010;
     constexpr DirectionInt Right = 0b0100;
     constexpr DirectionInt Down = 0b1000;
+    constexpr auto AllDirections = {Up, Left, Right, Down};
 
     typedef std::uint_least8_t PosInt;
     constexpr PosInt IsWall = 0b0000;
@@ -38,6 +39,7 @@ namespace Sokoban {
     typedef std::uint_least64_t TimeInt;
     typedef std::pair<MazeInt, MazeInt> Pos;
 
+    constexpr const char *DirectionName(const DirectionInt &direction);
     constexpr Pos Movement(const DirectionInt &direction);
 
     template <std::size_t StateBits>
@@ -77,7 +79,7 @@ namespace Sokoban {
             }
             Maze[PlayerPos.first][PlayerPos.second] |= IsPlayer;
             Directions = NoDirection;
-            for (const auto &d : {Up, Left, Right, Down})
+            for (const auto &d : AllDirections)
                 if (CheckDirection(d, PlayerPos.first, PlayerPos.second, true)) Directions |= d;
             Succeeded = Finished == BoxPos0.size();
             Failed = CheckFailed();
@@ -164,7 +166,7 @@ namespace Sokoban {
             if (vis.count(p)) return false;
             vis.insert(p);
             bool ret = false;
-            for (const auto &d : {Up, Left, Right, Down}) {
+            for (const auto &d : AllDirections) {
                 const auto &movement = Movement(d);
                 if (CheckDirection(d, line, col, false))
                     ret = ret || CanPushAny(line + movement.first, col + movement.second, vis);
@@ -419,6 +421,14 @@ namespace Sokoban {
         }
     };
 }  // namespace Sokoban
+
+constexpr const char *Sokoban::DirectionName(const DirectionInt &direction) {
+    if (direction == Up) return "Up";
+    if (direction == Left) return "Left";
+    if (direction == Right) return "Right";
+    if (direction == Down) return "Down";
+    return "";
+}
 
 constexpr Sokoban::Pos Sokoban::Movement(const Sokoban::DirectionInt &direction) {
     if (direction == Up) return {-1, 0};

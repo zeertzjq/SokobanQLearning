@@ -60,12 +60,16 @@ namespace SokobanQLearning {
     public:
         void Print(std::ostream &os, int precision, int column_width) const {
             os << std::right << std::setfill(' ') << std::fixed << std::setprecision(precision) << std::endl
-               << std::setw(2 + (StateBits >> 2) + !!(StateBits & 0b11)) << "State" << std::setw(column_width) << "Up" << std::setw(column_width) << "Left" << std::setw(column_width) << "Right" << std::setw(column_width) << "Down" << std::endl;
+               << std::setw(2 + (StateBits >> 2) + !!(StateBits & 0b11)) << "State";
+            for (const auto &d : Sokoban::AllDirections)
+                os << std::setw(column_width) << Sokoban::DirectionName(d);
+            os << std::endl;
             for (const auto &p : this->_map) {
                 auto state_str = p.first.to_string();
                 Utils::BinToHex(state_str);
                 os << std::setw(5) << "0x" + state_str;
-                for (const auto &value : p.second) os << std::setw(column_width) << value;
+                for (const auto &value : p.second)
+                    os << std::setw(column_width) << value;
                 os << std::endl;
             }
             os << std::endl;
@@ -128,8 +132,9 @@ namespace SokobanQLearning {
         const auto &actions = game.GetDirections();
         const auto &state = game.GetState();
         RealType max_Q = -(retrace_penalty + failure_penalty + goal_reward * game.GetBoxPos0().size());
-        for (const auto &d : {Sokoban::Up, Sokoban::Left, Sokoban::Right, Sokoban::Down})
-            if (actions & d) max_Q = std::max(max_Q, Q.Get(state, d));
+        for (const auto &d : Sokoban::AllDirections)
+            if (actions & d)
+                max_Q = std::max(max_Q, Q.Get(state, d));
         Q.Set(last_state, last_action, (static_cast<RealType>(1) - alpha) * Q.Get(last_state, last_action) + alpha * (reward + gamma * max_Q));
         return last_action;
     }
