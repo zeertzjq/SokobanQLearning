@@ -401,7 +401,6 @@ namespace Sokoban {
                                 GoalPos.emplace(line, col);
                                 break;
                         }
-                        break;
                 }
             }
             if (PlayerPos0.first + PlayerPos0.second == -2) throw Error("No Player");
@@ -423,19 +422,33 @@ namespace Sokoban {
 }  // namespace Sokoban
 
 constexpr const char *Sokoban::DirectionName(const DirectionInt &direction) {
-    if (direction == Up) return "Up";
-    if (direction == Left) return "Left";
-    if (direction == Right) return "Right";
-    if (direction == Down) return "Down";
-    return "";
+    switch (direction) {
+        case Up:
+            return "Up";
+        case Left:
+            return "Left";
+        case Right:
+            return "Right";
+        case Down:
+            return "Down";
+        default:
+            return "N/A";
+    }
 }
 
 constexpr Sokoban::Pos Sokoban::Movement(const Sokoban::DirectionInt &direction) {
-    if (direction == Up) return {-1, 0};
-    if (direction == Left) return {0, -1};
-    if (direction == Right) return {0, 1};
-    if (direction == Down) return {1, 0};
-    return {0, 0};
+    switch (direction) {
+        case Up:
+            return {-1, 0};
+        case Left:
+            return {0, -1};
+        case Right:
+            return {0, 1};
+        case Down:
+            return {1, 0};
+        default:
+            return {0, 0};
+    }
 }
 
 #endif  // SokobanQLearning_Sokoban_HPP_

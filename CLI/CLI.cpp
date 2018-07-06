@@ -22,7 +22,7 @@
 
 namespace {
     void PrintOption(std::ostream &os, const std::string &option, const std::string &description) {
-        os << std::left << std::setfill(' ') << std::string(4, ' ');
+        os << std::string(4, ' ') << std::left << std::setfill(' ');
         if (option.size() <= 18)
             os << std::setw(20) << option << description << std::endl;
         else
@@ -69,7 +69,7 @@ namespace {
         std::cout << "\x1b[H\x1b[2J" << std::flush;
     }
 
-    template <std::size_t StateBits>
+    template <typename RealType, std::size_t StateBits>
     bool RunAlgorithm(std::string maze) {
         std::shared_ptr<Sokoban::Game<StateBits>> game_ptr;
         try {
@@ -80,18 +80,22 @@ namespace {
             return false;
         }
         auto &game = *game_ptr;
-        SokobanQLearning::PrintableQTable<float, StateBits> Q;
+        SokobanQLearning::PrintableQTable<RealType, StateBits> Q;
         std::mt19937 random_engine(std::chrono::high_resolution_clock::now().time_since_epoch().count());
         interrupted = false;
         std::signal(SIGINT, [](int) -> void {
             interrupted = true;
         });
-        while (!interrupted && quiet--) SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f);
+        while (!interrupted && quiet-- > 1) SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f);
+        if (interrupted) {
+            if (print_Q_exit) Q.Print(std::clog, 4, 12);
+            return true;
+        }
+        SokobanQLearning::TrainResult<RealType, StateBits> train_result = {game.GetState(), Q.Get(game.GetState())};
+        if (quiet >= 0) train_result = std::move(SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f));
         while (!interrupted) {
             ClearConsole();
             game.GetMazeString(maze);
-            auto state_str = game.GetState().to_string();
-            Utils::BinToHex(state_str);
 #ifdef SokobanQLearning_USE_EMOJI_
             if (emoji) Utils::MazeToEmoji(maze);
 #endif
@@ -99,18 +103,32 @@ namespace {
                       << maze << std::endl
                       << std::endl
                       << "Time: " << std::dec << game.GetTimeElapsed() << std::endl
-                      << "State: 0x" << state_str << std::endl;
+                      << "State: 0x" << Utils::BinToHex(std::move(game.GetState().to_string())) << std::endl;
+            std::cout << std::endl;
+            Q.PrintHeader(std::cout, 12);
+            Q.PrintStateRow(std::cout, 4, 12, game.GetState());
+            std::cout << std::endl;
+            train_result.Print(std::cout, 4, 12);
             if (game.GetSucceeded()) {
                 std::cout << "Succeeded" << std::endl;
-                if (print_Q_success) Q.Print(std::clog, 4, 12);
+                if (print_Q_success) {
+                    std::clog << std::endl;
+                    Q.Print(std::clog, 4, 12);
+                }
             } else if (game.GetFailed()) {
                 std::cout << "Failed" << std::endl;
-                if (print_Q_failure) Q.Print(std::clog, 4, 12);
+                if (print_Q_failure) {
+                    std::clog << std::endl;
+                    Q.Print(std::clog, 4, 12);
+                }
             }
-            SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f);
             if (sleep) std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
+            train_result = std::move(SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f));
         }
-        if (print_Q_exit) Q.Print(std::clog, 4, 12);
+        if (print_Q_exit) {
+            std::clog << std::endl;
+            Q.Print(std::clog, 4, 12);
+        }
         return true;
     }
 }  // namespace
@@ -174,7 +192,7 @@ int main(int argc, char *argv[]) {
     char c;
     std::string maze;
     while (std::cin >> std::noskipws >> c) maze += c;
-    if (RunAlgorithm<64>(std::move(maze)))
+    if (RunAlgorithm<float, 64>(std::move(maze)))
         return 0;
     else
         return 1;

@@ -6,19 +6,19 @@
 #include <string>
 
 namespace Utils {
-    void BinToHex(std::string &);
+    std::string BinToHex(std::string);
 
 #ifdef SokobanQLearning_USE_EMOJI_
     void MazeToEmoji(std::string &);
 #endif
 }  // namespace Utils
 
-void Utils::BinToHex(std::string &str) {
+std::string Utils::BinToHex(std::string str) {
     while (str.size() & 0b11) str = '0' + str;
     std::ostringstream oss;
     for (std::string::size_type i = 0; i < str.size(); i += 4)
         oss << std::hex << std::bitset<4>(str, i, 4).to_ulong();
-    str = oss.str();
+    return oss.str();
 }
 
 #ifdef SokobanQLearning_USE_EMOJI_
