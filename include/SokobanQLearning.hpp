@@ -90,7 +90,8 @@ namespace SokobanQLearning {
     template <class RealType, std::size_t StateBits>
     class PrintableQTable : public QTable<RealType, StateBits> {
     public:
-        typedef typename IQTable<RealType, StateBits>::StateType StateType;
+        using typename QTable<RealType, StateBits>::StateType;
+        using typename QTable<RealType, StateBits>::RowType;
         static constexpr std::size_t FirstColumnWidth = std::max(2 + (StateBits >> 2) + !!(StateBits & 0b11), static_cast<std::size_t>(6));
 
         void PrintStateRow(std::ostream &os, int precision, int column_width, const StateType &state) const {
