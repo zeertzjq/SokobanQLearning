@@ -46,7 +46,6 @@ void Utils::MazeToEmoji(std::string &maze) {
                 break;
             default:
                 maze += c;
-                break;
         }
     }
 }
