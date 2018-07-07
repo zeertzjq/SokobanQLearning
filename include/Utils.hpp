@@ -35,10 +35,10 @@ namespace Utils {
                     ret += "\u2b55";
                     break;
                 case '.':
-                    ret += "\u2b1b";
+                    ret += "\u3000";
                     break;
                 case '#':
-                    ret += "\u2b1c";
+                    ret += "\u274e";
                     break;
                 default:
                     ret += c;
