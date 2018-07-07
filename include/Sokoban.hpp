@@ -39,8 +39,35 @@ namespace Sokoban {
     typedef std::uint_least64_t TimeInt;
     typedef std::pair<MazeInt, MazeInt> Pos;
 
-    constexpr const char *DirectionName(const DirectionInt &direction);
-    constexpr Pos Movement(const DirectionInt &direction);
+    constexpr const char *DirectionName(const DirectionInt &direction) {
+        switch (direction) {
+            case Up:
+                return "Up";
+            case Left:
+                return "Left";
+            case Right:
+                return "Right";
+            case Down:
+                return "Down";
+            default:
+                return "N/A";
+        }
+    }
+
+    constexpr Pos Movement(const DirectionInt &direction) {
+        switch (direction) {
+            case Up:
+                return {-1, 0};
+            case Left:
+                return {0, -1};
+            case Right:
+                return {0, 1};
+            case Down:
+                return {1, 0};
+            default:
+                return {0, 0};
+        }
+    }
 
     template <std::size_t StateBits>
     class Game {
@@ -421,35 +448,5 @@ namespace Sokoban {
         }
     };
 }  // namespace Sokoban
-
-constexpr const char *Sokoban::DirectionName(const DirectionInt &direction) {
-    switch (direction) {
-        case Up:
-            return "Up";
-        case Left:
-            return "Left";
-        case Right:
-            return "Right";
-        case Down:
-            return "Down";
-        default:
-            return "N/A";
-    }
-}
-
-constexpr Sokoban::Pos Sokoban::Movement(const Sokoban::DirectionInt &direction) {
-    switch (direction) {
-        case Up:
-            return {-1, 0};
-        case Left:
-            return {0, -1};
-        case Right:
-            return {0, 1};
-        case Down:
-            return {1, 0};
-        default:
-            return {0, 0};
-    }
-}
 
 #endif  // SokobanQLearning_Sokoban_HPP_
