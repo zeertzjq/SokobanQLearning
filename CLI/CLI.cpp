@@ -92,18 +92,18 @@ namespace {
             return true;
         }
         SokobanQLearning::TrainResult<RealType, StateBits> train_result = {game.GetState(), Q.Get(game.GetState())};
-        if (quiet >= 0) train_result = std::move(SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f));
+        if (quiet >= 0) train_result = SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f);
         while (!interrupted) {
             ClearConsole();
-            game.GetMazeString(maze);
+            maze = game.GetMazeString();
 #ifdef SokobanQLearning_USE_EMOJI_
-            if (emoji) Utils::MazeToEmoji(maze);
+            if (emoji) maze = Utils::MazeToEmoji(maze);
 #endif
             std::cout << std::endl
                       << maze << std::endl
                       << std::endl
                       << "Time: " << std::dec << game.GetTimeElapsed() << std::endl
-                      << "State: 0x" << Utils::BinToHex(std::move(game.GetState().to_string())) << std::endl;
+                      << "State: 0x" << Utils::BitsToHex(game.GetState()) << std::endl;
             std::cout << std::endl;
             Q.PrintHeader(std::cout, 12);
             Q.PrintStateRow(std::cout, 4, 12, game.GetState());
@@ -123,7 +123,7 @@ namespace {
                 }
             }
             if (sleep) std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
-            train_result = std::move(SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f));
+            train_result = SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f);
         }
         if (print_Q_exit) {
             std::clog << std::endl;

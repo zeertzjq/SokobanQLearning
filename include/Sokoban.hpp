@@ -233,8 +233,8 @@ namespace Sokoban {
             return pushed;
         }
 
-        void WriteMazeString(std::string &str) const {
-            str.clear();
+        std::string MazeString() const {
+            std::string str;
             for (const auto &row : Maze) {
                 for (const auto &c : row) {
                     switch (c) {
@@ -264,6 +264,7 @@ namespace Sokoban {
                 str += '\n';
             }
             str.pop_back();
+            return str;
         }
 
     public:
@@ -335,8 +336,8 @@ namespace Sokoban {
             return StateHistory;
         }
 
-        void GetMazeString(std::string &str) const {
-            WriteMazeString(str);
+        std::string GetMazeString() const {
+            return MazeString();
         }
 
         void Restart() {

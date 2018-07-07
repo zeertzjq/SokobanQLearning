@@ -1,19 +1,23 @@
 #ifndef SokobanQLearning_Utils_HPP_
 #define SokobanQLearning_Utils_HPP_ 1
 
+#include <bitset>
+#include <cstddef>
 #include <iomanip>
 #include <sstream>
 #include <string>
 
 namespace Utils {
-    std::string BinToHex(std::string);
+    template <std::size_t N>
+    std::string BitsToHex(const std::bitset<N> &);
 
 #ifdef SokobanQLearning_USE_EMOJI_
-    void MazeToEmoji(std::string &);
+    std::string MazeToEmoji(const std::string &);
 #endif
 }  // namespace Utils
-
-std::string Utils::BinToHex(std::string str) {
+template <std::size_t N>
+std::string Utils::BitsToHex(const std::bitset<N> &bits) {
+    auto str = bits.to_string();
     while (str.size() & 0b11) str = '0' + str;
     std::ostringstream oss;
     for (std::string::size_type i = 0; i < str.size(); i += 4)
@@ -22,32 +26,32 @@ std::string Utils::BinToHex(std::string str) {
 }
 
 #ifdef SokobanQLearning_USE_EMOJI_
-void Utils::MazeToEmoji(std::string &maze) {
-    const auto old_maze = maze;
-    maze.clear();
-    for (const auto &c : old_maze) {
+std::string Utils::MazeToEmoji(const std::string &maze) {
+    std::string ret;
+    for (const auto &c : maze) {
         switch (c) {
             case '*':
             case '+':
-                maze += "\U0001f643";
+                ret += "\U0001f643";
                 break;
             case '&':
             case '@':
-                maze += "\U0001f4e6";
+                ret += "\U0001f4e6";
                 break;
             case '$':
-                maze += "\u2b55";
+                ret += "\u2b55";
                 break;
             case '.':
-                maze += "\u2b1b";
+                ret += "\u2b1b";
                 break;
             case '#':
-                maze += "\u2b1c";
+                ret += "\u2b1c";
                 break;
             default:
-                maze += c;
+                ret += c;
         }
     }
+    return ret;
 }
 #endif
 

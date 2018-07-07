@@ -95,7 +95,7 @@ namespace SokobanQLearning {
         static constexpr std::size_t FirstColumnWidth = std::max(2 + (StateBits >> 2) + !!(StateBits & 0b11), static_cast<std::size_t>(6));
 
         void PrintStateRow(std::ostream &os, int precision, int column_width, const StateType &state) const {
-            os << std::right << std::setfill(' ') << std::setw(FirstColumnWidth) << "0x" + Utils::BinToHex(std::move(state.to_string())) << std::setprecision(precision) << std::fixed;
+            os << std::right << std::setfill(' ') << std::setw(FirstColumnWidth) << "0x" + Utils::BitsToHex(state) << std::setprecision(precision) << std::fixed;
             for (const auto &value : this->Get(state))
                 os << std::setw(column_width) << value;
             os << std::endl;
@@ -128,11 +128,11 @@ namespace SokobanQLearning {
         RowType OldRow, NewRow;
 
         void Print(std::ostream &os, int precision, int column_width) const {
-            os << "Last State: 0x" << Utils::BinToHex(std::move(LastState.to_string())) << std::endl;
+            os << "Last State: 0x" << Utils::BitsToHex(LastState) << std::endl;
             os << "Action: " << Sokoban::DirectionName(Action) << std::endl;
             if (Action == Sokoban::NoDirection) return;
             os << std::endl
-               << std::right << std::setfill(' ') << std::setw(FirstColumnWidth) << "0x" + Utils::BinToHex(std::move(LastState.to_string()));
+               << std::right << std::setfill(' ') << std::setw(FirstColumnWidth) << "0x" + Utils::BitsToHex(LastState);
             for (const auto &d : Sokoban::AllDirections)
                 os << std::setw(column_width) << Sokoban::DirectionName(d);
             os << std::endl
