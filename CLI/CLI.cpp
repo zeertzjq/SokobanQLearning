@@ -6,6 +6,7 @@
 #include <chrono>
 #include <csignal>
 #include <cstddef>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -86,13 +87,14 @@ namespace {
         std::signal(SIGINT, [](int) -> void {
             interrupted = true;
         });
-        while (!interrupted && quiet-- > 1) SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f);
+        auto train = std::bind(SokobanQLearning::Train<decltype(random_engine), RealType, StateBits>, std::ref(random_engine), std::ref(game), std::ref(Q), 0.05, 0.5f, 1.0f, 1.0f, 50.0f, 1000.0f, 1000.0f);
+        while (!interrupted && quiet-- > 1) train();
         if (interrupted) {
             if (print_Q_exit) Q.Print(std::clog, 4, 12);
             return true;
         }
         SokobanQLearning::TrainResult<RealType, StateBits> train_result = {game.GetState(), Q.Get(game.GetState())};
-        if (quiet >= 0) train_result = SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f);
+        if (quiet >= 0) train_result = train();
         while (!interrupted) {
             ClearConsole();
             maze = game.GetMazeString();
@@ -123,7 +125,7 @@ namespace {
                 }
             }
             if (sleep) std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
-            train_result = SokobanQLearning::Train(random_engine, game, Q, 0.05, 0.5f, 0.5f, 1.0f, 2.0f, 50.0f, 1000.0f, 1000.0f);
+            train_result = train();
         }
         if (print_Q_exit) {
             std::clog << std::endl;

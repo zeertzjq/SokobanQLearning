@@ -126,17 +126,19 @@ namespace SokobanQLearning {
         Sokoban::DirectionInt Action;
         StateType LastState;
         RowType OldRow, NewRow;
+        RealType Reward;
+        bool Pushed;
 
         void Print(std::ostream &os, int precision, int column_width) const {
             os << "Last State: 0x" << Utils::BitsToHex(LastState) << std::endl;
             os << "Action: " << Sokoban::DirectionName(Action) << std::endl;
             if (Action == Sokoban::NoDirection) return;
+            os << "Reward: " << std::fixed << std::setprecision(precision) << Reward << std::endl;
             os << std::endl
                << std::right << std::setfill(' ') << std::setw(FirstColumnWidth) << "0x" + Utils::BitsToHex(LastState);
             for (const auto &d : Sokoban::AllDirections)
                 os << std::setw(column_width) << Sokoban::DirectionName(d);
-            os << std::endl
-               << std::fixed << std::setprecision(precision);
+            os << std::endl;
             os << std::setw(FirstColumnWidth) << "Old";
             for (const auto &value : OldRow)
                 os << std::setw(column_width) << value;
@@ -148,8 +150,8 @@ namespace SokobanQLearning {
                << std::endl;
         }
 
-        TrainResult(const StateType &last_state, const RowType &old_row, const Sokoban::DirectionInt &action, const RowType &new_row) : Action(action), LastState(last_state), OldRow(old_row), NewRow(new_row) {}
-        TrainResult(const StateType &last_state, const RowType &old_row) : TrainResult(last_state, old_row, Sokoban::NoDirection, old_row) {}
+        TrainResult(const StateType &last_state, const RowType &old_row, const Sokoban::DirectionInt &action, const RealType &reward, bool pushed, const RowType &new_row) : Action(action), LastState(last_state), OldRow(old_row), NewRow(new_row), Reward(reward), Pushed(pushed) {}
+        TrainResult(const StateType &last_state, const RowType &old_row) : TrainResult(last_state, old_row, Sokoban::NoDirection, 0, false, old_row) {}
     };
 
     template <class URNG, class RealType, std::size_t StateBits>
@@ -191,7 +193,7 @@ namespace SokobanQLearning {
     }
 
     template <class URNG, class RealType, std::size_t StateBits>
-    TrainResult<RealType, StateBits> Train(URNG &random_generator, Sokoban::Game<StateBits> &game, IQTable<RealType, StateBits> &Q, const double &epsilon, const RealType &alpha, const RealType &gamma, const RealType &retrace_penalty, const RealType &push_reward, const RealType &goal_reward, const RealType &failure_penalty, const RealType &success_reward) {
+    TrainResult<RealType, StateBits> Train(URNG &random_generator, Sokoban::Game<StateBits> &game, IQTable<RealType, StateBits> &Q, const double &epsilon, const RealType &alpha, const RealType &gamma, const RealType &retrace_penalty, const RealType &goal_reward, const RealType &failure_penalty, const RealType &success_reward) {
         const auto last_state = game.GetState();
         const auto old_row = Q.Get(last_state);
         if (game.GetSucceeded() || game.GetFailed()) {
@@ -204,7 +206,6 @@ namespace SokobanQLearning {
         const auto state = game.GetState();
         RealType reward = goal_reward * (game.GetFinished() - last_finished);
         if (game.GetStateHistory().count(state)) reward -= retrace_penalty;
-        if (pushed) reward += push_reward;
         if (game.GetSucceeded()) reward += success_reward;
         if (game.GetFailed()) reward -= failure_penalty;
         const auto actions = game.GetDirections();
@@ -213,7 +214,7 @@ namespace SokobanQLearning {
             if (actions & d)
                 max_Q = std::max(max_Q, Q.Get(state, d));
         Q.Set(last_state, last_action, (static_cast<RealType>(1) - alpha) * Q.Get(last_state, last_action) + alpha * (reward + gamma * max_Q));
-        return {last_state, old_row, last_action, Q.Get(last_state)};
+        return {last_state, old_row, last_action, reward, pushed, Q.Get(last_state)};
     }
 }  // namespace SokobanQLearning
 

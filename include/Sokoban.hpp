@@ -118,7 +118,7 @@ namespace Sokoban {
             return FloorIndex[line][col] >= 0;
         }
 
-        bool CheckDirection(const DirectionInt &direction, const MazeInt &line, const MazeInt &col, const bool &can_push_box) const {
+        bool CheckDirection(const DirectionInt &direction, const MazeInt &line, const MazeInt &col, bool can_push_box) const {
             const auto &movement = Movement(direction);
             if (!CheckFloor(line + movement.first, col + movement.second)) return false;
             if (Maze[line + movement.first][col + movement.second] & IsBox) {
@@ -131,7 +131,7 @@ namespace Sokoban {
             return true;
         }
 
-        bool BoxStuck(const MazeInt &line, const MazeInt &col, const bool &is_horizontal, std::set<std::pair<Pos, bool>> &vis) const {
+        bool BoxStuck(const MazeInt &line, const MazeInt &col, bool is_horizontal, std::set<std::pair<Pos, bool>> &vis) const {
             const auto &current = std::make_pair(Pos{line, col}, is_horizontal);
             if (vis.count(current)) {
                 vis.erase(current);
@@ -209,9 +209,9 @@ namespace Sokoban {
             for (const auto &b : BoxPos) {
                 std::set<std::pair<Pos, bool>> vis;
                 vis.clear();
-                const bool &stuck_vertical = BoxStuck(b.first, b.second, false, vis);
+                bool stuck_vertical = BoxStuck(b.first, b.second, false, vis);
                 vis.clear();
-                const bool &stuck_horizontal = BoxStuck(b.first, b.second, true, vis);
+                bool stuck_horizontal = BoxStuck(b.first, b.second, true, vis);
                 if (Maze[b.first][b.second] != (IsFloor | IsGoal | IsBox)) {
                     if (stuck_vertical && stuck_horizontal) return true;
                     if (stuck_vertical) {
