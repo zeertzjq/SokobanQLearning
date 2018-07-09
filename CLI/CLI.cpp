@@ -87,7 +87,7 @@ namespace {
         std::signal(SIGINT, [](int) -> void {
             interrupted = true;
         });
-        auto train = std::bind(SokobanQLearning::Train<decltype(random_engine), RealType, StateBits>, std::ref(random_engine), std::ref(game), std::ref(Q), 0.05, 0.5f, 1.0f, 1.0f, 1.0f, 50.0f, 1000.0f, 1000.0f);
+        auto train = std::bind(SokobanQLearning::Train<decltype(random_engine), RealType, StateBits>, std::ref(random_engine), std::ref(game), std::ref(Q), 0.05, 0.5f, 1.0f, 1.0f, 0.5f, 50.0f, 1000.0f, 1000.0f);
         while (!interrupted && quiet-- > 1) train();
         if (interrupted) {
             if (print_Q_exit) Q.Print(std::clog, 4, 12);
@@ -112,12 +112,18 @@ namespace {
             std::cout << std::endl;
             train_result.Print(std::cout, 4, 12);
             if (game.GetSucceeded()) {
+#ifdef SokobanQLearning_USE_EMOJI_
+                if (emoji) std::cout << "\U00002b55";
+#endif
                 std::cout << "Succeeded" << std::endl;
                 if (print_Q_success) {
                     std::clog << std::endl;
                     Q.Print(std::clog, 4, 12);
                 }
             } else if (game.GetFailed()) {
+#ifdef SokobanQLearning_USE_EMOJI_
+                if (emoji) std::cout << "\U0000274c";
+#endif
                 std::cout << "Failed" << std::endl;
                 if (print_Q_failure) {
                     std::clog << std::endl;
@@ -150,7 +156,7 @@ int main(int argc, char *argv[]) {
             PrintOption(std::cout, "--sleep=<num>", "Sleep for <num> milliseconds between two steps (default value is 100)");
             PrintOption(std::cout, "--quiet=<num>", "Train for <num> steps before doing anything else (default value is 0)");
 #ifdef SokobanQLearning_USE_EMOJI_
-            PrintOption(std::cout, "--emoji", "Print the maze with emoji symbols (NOT GUARANTEED TO WORK)");
+            PrintOption(std::cout, "--emoji", "Using emoji symbols in output (NOT GUARANTEED TO WORK)");
 #endif
 #ifdef SokobanQLearning_CLI_USE_WINAPI_
             PrintOption(std::cout, "--ansi-escape", "Clear the console using ansi escape sequences instead of calling Windows APIs");

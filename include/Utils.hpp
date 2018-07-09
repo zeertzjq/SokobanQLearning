@@ -32,13 +32,13 @@ namespace Utils {
                     ret += "\U0001f4e6";
                     break;
                 case '$':
-                    ret += "\u2b55";
+                    ret += "\U00002b55";
                     break;
                 case '.':
-                    ret += "\u3000";
+                    ret += "\U00003000";
                     break;
                 case '#':
-                    ret += "\u274e";
+                    ret += "\U0000274e";
                     break;
                 default:
                     ret += c;
