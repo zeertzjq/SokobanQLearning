@@ -113,9 +113,7 @@ namespace Sokoban {
         }
 
         bool CheckFloor(const MazeInt &line, const MazeInt &col) const {
-            if (line < 0 || line >= Height) return false;
-            if (col < 0 || col >= Width) return false;
-            return FloorIndex[line][col] >= 0;
+            return line >= 0 && line < Height && col >= 0 && col < Width ? FloorIndex[line][col] >= 0 : false;
         }
 
         bool CheckDirection(const DirectionInt &direction, const MazeInt &line, const MazeInt &col, bool can_push_box) const {
@@ -123,8 +121,7 @@ namespace Sokoban {
             if (!CheckFloor(line + movement.first, col + movement.second)) return false;
             if (Maze[line + movement.first][col + movement.second] & IsBox) {
                 if (can_push_box) {
-                    if (!CheckDirection(direction, line + movement.first, col + movement.second, false))
-                        return false;
+                    if (!CheckDirection(direction, line + movement.first, col + movement.second, false)) return false;
                 } else
                     return false;
             }
@@ -139,21 +136,14 @@ namespace Sokoban {
             }
             vis.insert(current);
             bool ret = false;
-            if (is_horizontal) {
-                if (!CheckFloor(line, col - 1) || !CheckFloor(line, col + 1))
-                    ret = true;
-                else if (Maze[line][col - 1] & IsBox && BoxStuck(line, col - 1, !is_horizontal, vis))
-                    ret = true;
-                else if (Maze[line][col + 1] & IsBox && BoxStuck(line, col + 1, !is_horizontal, vis))
-                    ret = true;
-            } else {
-                if (!CheckFloor(line - 1, col) || !CheckFloor(line + 1, col))
-                    ret = true;
-                else if (Maze[line - 1][col] & IsBox && BoxStuck(line - 1, col, !is_horizontal, vis))
-                    ret = true;
-                else if (Maze[line + 1][col] & IsBox && BoxStuck(line + 1, col, !is_horizontal, vis))
-                    ret = true;
-            }
+            if (is_horizontal)
+                ret = !CheckFloor(line, col - 1) || !CheckFloor(line, col + 1) ||
+                      (Maze[line][col - 1] & IsBox && BoxStuck(line, col - 1, !is_horizontal, vis)) ||
+                      (Maze[line][col + 1] & IsBox && BoxStuck(line, col + 1, !is_horizontal, vis));
+            else
+                ret = !CheckFloor(line - 1, col) || !CheckFloor(line + 1, col) ||
+                      (Maze[line - 1][col] & IsBox && BoxStuck(line - 1, col, !is_horizontal, vis)) ||
+                      (Maze[line + 1][col] & IsBox && BoxStuck(line + 1, col, !is_horizontal, vis));
             vis.erase(current);
             return ret;
         }
@@ -195,10 +185,7 @@ namespace Sokoban {
             bool ret = false;
             for (const auto &d : AllDirections) {
                 const auto &movement = Movement(d);
-                if (CheckDirection(d, line, col, false))
-                    ret = ret || CanPushAny(line + movement.first, col + movement.second, vis);
-                else
-                    ret = ret || CheckDirection(d, line, col, true);
+                ret = ret || (CheckDirection(d, line, col, false) ? CanPushAny(line + movement.first, col + movement.second, vis) : CheckDirection(d, line, col, true));
             }
             return ret;
         }

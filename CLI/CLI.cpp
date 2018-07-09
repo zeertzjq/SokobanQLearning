@@ -36,6 +36,7 @@ namespace {
     bool print_Q_exit = false;
     long long sleep = 100;
     long long quiet = 0;
+    bool random_device = false;
     std::atomic_bool interrupted;
 
 #ifdef SokobanQLearning_CLI_USE_WINAPI_
@@ -82,7 +83,7 @@ namespace {
         }
         auto &game = *game_ptr;
         SokobanQLearning::PrintableQTable<RealType, StateBits> Q;
-        std::mt19937 random_engine(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+        std::mt19937 random_engine(random_device ? std::random_device()() : std::chrono::system_clock::now().time_since_epoch().count());
         interrupted = false;
         std::signal(SIGINT, [](int) -> void {
             interrupted = true;
@@ -90,11 +91,11 @@ namespace {
         auto train = std::bind(SokobanQLearning::Train<decltype(random_engine), RealType, StateBits>, std::ref(random_engine), std::ref(game), std::ref(Q), 0.05, 0.5f, 1.0f, 1.0f, 0.5f, 50.0f, 1000.0f, 1000.0f);
         while (!interrupted && quiet-- > 1) train();
         if (interrupted) {
+            std::cout << std::endl;
             if (print_Q_exit) Q.Print(std::clog, 4, 12);
             return true;
         }
-        SokobanQLearning::TrainResult<RealType, StateBits> train_result = {game.GetState(), Q.Get(game.GetState())};
-        if (quiet >= 0) train_result = train();
+        SokobanQLearning::TrainResult<RealType, StateBits> train_result = quiet >= 0 ? train() : decltype(train_result){game.GetState(), Q.Get(game.GetState())};
         while (!interrupted) {
             ClearConsole();
             maze = game.GetMazeString();
@@ -155,6 +156,7 @@ int main(int argc, char *argv[]) {
             PrintOption(std::cout, "--print-q-exit", "Print the Q table on exit");
             PrintOption(std::cout, "--sleep=<num>", "Sleep for <num> milliseconds between two steps (default value is 100)");
             PrintOption(std::cout, "--quiet=<num>", "Train for <num> steps before doing anything else (default value is 0)");
+            PrintOption(std::cout, "--random-device", "Obtain the random seed from the system random device instead of the system time (NOT GUARANTEED TO WORK)");
 #ifdef SokobanQLearning_USE_EMOJI_
             PrintOption(std::cout, "--emoji", "Using emoji symbols in output (NOT GUARANTEED TO WORK)");
 #endif
@@ -183,6 +185,8 @@ int main(int argc, char *argv[]) {
             } catch (const std::invalid_argument &) {
                 std::cerr << "Ignored invalid option: " + arg << std::endl;
             }
+        } else if (arg == "--random-device") {
+            random_device = true;
 #ifdef SokobanQLearning_USE_EMOJI_
         } else if (arg == "--emoji") {
             emoji = true;
@@ -200,8 +204,5 @@ int main(int argc, char *argv[]) {
     char c;
     std::string maze;
     while (std::cin >> std::noskipws >> c) maze += c;
-    if (RunAlgorithm<float, 64>(std::move(maze)))
-        return 0;
-    else
-        return 1;
+    return RunAlgorithm<float, 64>(std::move(maze)) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

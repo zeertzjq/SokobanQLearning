@@ -55,10 +55,7 @@ namespace SokobanQLearning {
         }
 
         RowType Get(const StateType &state) const override {
-            if (_map.count(state))
-                return _map.at(state);
-            else
-                return {{0, 0, 0, 0}};
+            return _map.count(state) ? _map.at(state) : RowType{{0, 0, 0, 0}};
         }
 
         void Set(const StateType &state, const Sokoban::DirectionInt &action, const RealType &value) override {
