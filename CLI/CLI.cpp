@@ -87,7 +87,7 @@ namespace {
         std::signal(SIGINT, [](int) -> void {
             interrupted = true;
         });
-        auto train = std::bind(SokobanQLearning::Train<decltype(random_engine), RealType, StateBits>, std::ref(random_engine), std::ref(game), std::ref(Q), 0.05, 0.5f, 1.0f, 1.0f, 50.0f, 1000.0f, 1000.0f);
+        auto train = std::bind(SokobanQLearning::Train<decltype(random_engine), RealType, StateBits>, std::ref(random_engine), std::ref(game), std::ref(Q), 0.05, 0.5f, 1.0f, 1.0f, 1.0f, 50.0f, 1000.0f, 1000.0f);
         while (!interrupted && quiet-- > 1) train();
         if (interrupted) {
             if (print_Q_exit) Q.Print(std::clog, 4, 12);

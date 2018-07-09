@@ -193,7 +193,7 @@ namespace SokobanQLearning {
     }
 
     template <class URNG, class RealType, std::size_t StateBits>
-    TrainResult<RealType, StateBits> Train(URNG &random_generator, Sokoban::Game<StateBits> &game, IQTable<RealType, StateBits> &Q, const double &epsilon, const RealType &alpha, const RealType &gamma, const RealType &retrace_penalty, const RealType &goal_reward, const RealType &failure_penalty, const RealType &success_reward) {
+    TrainResult<RealType, StateBits> Train(URNG &random_generator, Sokoban::Game<StateBits> &game, IQTable<RealType, StateBits> &Q, const double &epsilon, const RealType &alpha, const RealType &gamma, const RealType &retrace_penalty, const RealType &push_reward, const RealType &goal_reward, const RealType &failure_penalty, const RealType &success_reward) {
         const auto last_state = game.GetState();
         const auto old_row = Q.Get(last_state);
         if (game.GetSucceeded() || game.GetFailed()) {
@@ -206,6 +206,7 @@ namespace SokobanQLearning {
         const auto state = game.GetState();
         RealType reward = goal_reward * (game.GetFinished() - last_finished);
         if (game.GetStateHistory().count(state)) reward -= retrace_penalty;
+        if (pushed) reward += push_reward;
         if (game.GetSucceeded()) reward += success_reward;
         if (game.GetFailed()) reward -= failure_penalty;
         const auto actions = game.GetDirections();
