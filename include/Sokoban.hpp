@@ -15,7 +15,8 @@
 namespace Sokoban {
     class Error : public std::runtime_error {
     public:
-        explicit Error(const std::string &message) : std::runtime_error(message) {}
+        explicit Error(const std::string &message)
+            : std::runtime_error(message) {}
     };
 
     typedef std::uint_least8_t DirectionInt;
@@ -95,40 +96,50 @@ namespace Sokoban {
             for (MazeInt i = 0; i < Height; ++i)
                 for (MazeInt j = 0; j < Width; ++j)
                     if (FloorIndex[i][j] >= 0) Maze[i][j] = IsFloor;
-            for (const auto &i : GoalPos)
-                Maze[i.first][i.second] |= IsGoal;
+            for (const auto &i : GoalPos) Maze[i.first][i.second] |= IsGoal;
             State = FloorIndex[PlayerPos.first][PlayerPos.second];
             SizeInt offset = 0;
             for (const auto &i : BoxPos) {
                 Maze[i.first][i.second] |= IsBox;
-                if (Maze[i.first][i.second] == (IsFloor | IsGoal | IsBox)) ++Finished;
-                State |= StateType(FloorIndex[i.first][i.second]) << FloorBits * ++offset;
+                if (Maze[i.first][i.second] == (IsFloor | IsGoal | IsBox))
+                    ++Finished;
+                State |= StateType(FloorIndex[i.first][i.second])
+                         << FloorBits * ++offset;
             }
             Maze[PlayerPos.first][PlayerPos.second] |= IsPlayer;
             Directions = NoDirection;
             for (const auto &d : AllDirections)
-                if (CheckDirection(d, PlayerPos.first, PlayerPos.second, true)) Directions |= d;
+                if (CheckDirection(d, PlayerPos.first, PlayerPos.second, true))
+                    Directions |= d;
             Succeeded = Finished == BoxPos0.size();
             Failed = CheckFailed();
         }
 
         bool CheckFloor(const MazeInt &line, const MazeInt &col) const {
-            return line >= 0 && line < Height && col >= 0 && col < Width ? FloorIndex[line][col] >= 0 : false;
+            return line >= 0 && line < Height && col >= 0 && col < Width
+                       ? FloorIndex[line][col] >= 0
+                       : false;
         }
 
-        bool CheckDirection(const DirectionInt &direction, const MazeInt &line, const MazeInt &col, bool can_push_box) const {
+        bool CheckDirection(const DirectionInt &direction, const MazeInt &line,
+                            const MazeInt &col, bool can_push_box) const {
             const auto &movement = Movement(direction);
-            if (!CheckFloor(line + movement.first, col + movement.second)) return false;
+            if (!CheckFloor(line + movement.first, col + movement.second))
+                return false;
             if (Maze[line + movement.first][col + movement.second] & IsBox) {
                 if (can_push_box) {
-                    if (!CheckDirection(direction, line + movement.first, col + movement.second, false)) return false;
+                    if (!CheckDirection(direction, line + movement.first,
+                                        col + movement.second, false))
+                        return false;
                 } else
                     return false;
             }
             return true;
         }
 
-        bool BoxStuck(const MazeInt &line, const MazeInt &col, bool is_horizontal, std::set<std::pair<Pos, bool>> &vis) const {
+        bool BoxStuck(const MazeInt &line, const MazeInt &col,
+                      bool is_horizontal,
+                      std::set<std::pair<Pos, bool>> &vis) const {
             const auto &current = std::make_pair(Pos{line, col}, is_horizontal);
             if (vis.count(current)) {
                 vis.erase(current);
@@ -137,18 +148,25 @@ namespace Sokoban {
             vis.insert(current);
             bool ret = false;
             if (is_horizontal)
-                ret = !CheckFloor(line, col - 1) || !CheckFloor(line, col + 1) ||
-                      (Maze[line][col - 1] & IsBox && BoxStuck(line, col - 1, !is_horizontal, vis)) ||
-                      (Maze[line][col + 1] & IsBox && BoxStuck(line, col + 1, !is_horizontal, vis));
+                ret = !CheckFloor(line, col - 1) ||
+                      !CheckFloor(line, col + 1) ||
+                      (Maze[line][col - 1] & IsBox &&
+                       BoxStuck(line, col - 1, !is_horizontal, vis)) ||
+                      (Maze[line][col + 1] & IsBox &&
+                       BoxStuck(line, col + 1, !is_horizontal, vis));
             else
-                ret = !CheckFloor(line - 1, col) || !CheckFloor(line + 1, col) ||
-                      (Maze[line - 1][col] & IsBox && BoxStuck(line - 1, col, !is_horizontal, vis)) ||
-                      (Maze[line + 1][col] & IsBox && BoxStuck(line + 1, col, !is_horizontal, vis));
+                ret = !CheckFloor(line - 1, col) ||
+                      !CheckFloor(line + 1, col) ||
+                      (Maze[line - 1][col] & IsBox &&
+                       BoxStuck(line - 1, col, !is_horizontal, vis)) ||
+                      (Maze[line + 1][col] & IsBox &&
+                       BoxStuck(line + 1, col, !is_horizontal, vis));
             vis.erase(current);
             return ret;
         }
 
-        bool WallStuck(const MazeInt &line, const MazeInt &col, const DirectionInt &side) const {
+        bool WallStuck(const MazeInt &line, const MazeInt &col,
+                       const DirectionInt &side) const {
             MazeInt box_count = !!(Maze[line][col] & IsBox);
             MazeInt goal_count = !!(Maze[line][col] & IsGoal);
             const auto &movement = Movement(side);
@@ -178,14 +196,18 @@ namespace Sokoban {
             return box_count > goal_count;
         }
 
-        bool CanPushAny(const MazeInt &line, const MazeInt &col, std::set<Pos> &vis) const {
+        bool CanPushAny(const MazeInt &line, const MazeInt &col,
+                        std::set<Pos> &vis) const {
             const Pos p{line, col};
             if (vis.count(p)) return false;
             vis.insert(p);
             bool ret = false;
             for (const auto &d : AllDirections) {
                 const auto &movement = Movement(d);
-                ret = ret || (CheckDirection(d, line, col, false) ? CanPushAny(line + movement.first, col + movement.second, vis) : CheckDirection(d, line, col, true));
+                ret = ret || (CheckDirection(d, line, col, false)
+                                  ? CanPushAny(line + movement.first,
+                                               col + movement.second, vis)
+                                  : CheckDirection(d, line, col, true));
             }
             return ret;
         }
@@ -203,20 +225,26 @@ namespace Sokoban {
                     if (stuck_vertical && stuck_horizontal) return true;
                     if (stuck_vertical) {
                         bool stuck = false;
-                        if (!CheckFloor(b.first - 1, b.second)) stuck = stuck || WallStuck(b.first, b.second, Down);
-                        if (!CheckFloor(b.first + 1, b.second)) stuck = stuck || WallStuck(b.first, b.second, Up);
+                        if (!CheckFloor(b.first - 1, b.second))
+                            stuck = stuck || WallStuck(b.first, b.second, Down);
+                        if (!CheckFloor(b.first + 1, b.second))
+                            stuck = stuck || WallStuck(b.first, b.second, Up);
                         if (stuck) return true;
                     }
                     if (stuck_horizontal) {
                         bool stuck = false;
-                        if (!CheckFloor(b.first, b.second - 1)) stuck = stuck || WallStuck(b.first, b.second, Right);
-                        if (!CheckFloor(b.first, b.second + 1)) stuck = stuck || WallStuck(b.first, b.second, Left);
+                        if (!CheckFloor(b.first, b.second - 1))
+                            stuck =
+                                stuck || WallStuck(b.first, b.second, Right);
+                        if (!CheckFloor(b.first, b.second + 1))
+                            stuck = stuck || WallStuck(b.first, b.second, Left);
                         if (stuck) return true;
                     }
                 }
             }
             std::set<Pos> vis;
-            if (!CanPushAny(PlayerPos.first, PlayerPos.second, vis)) return true;
+            if (!CanPushAny(PlayerPos.first, PlayerPos.second, vis))
+                return true;
             return false;
         }
 
@@ -234,11 +262,13 @@ namespace Sokoban {
             if (movement.first == movement.second) return false;
             ++TimeElapsed;
             StateHistory.insert(State);
-            PlayerPos = {PlayerPos.first + movement.first, PlayerPos.second + movement.second};
+            PlayerPos = {PlayerPos.first + movement.first,
+                         PlayerPos.second + movement.second};
             const auto &pushed_box = BoxPos.find(PlayerPos);
             bool pushed = false;
             if (pushed_box != BoxPos.end()) {
-                Pos p{pushed_box->first + movement.first, pushed_box->second + movement.second};
+                Pos p{pushed_box->first + movement.first,
+                      pushed_box->second + movement.second};
                 BoxPos.erase(pushed_box);
                 BoxPos.insert(p);
                 pushed = true;
@@ -282,91 +312,50 @@ namespace Sokoban {
         }
 
     public:
-        const auto &GetSucceeded() const {
-            return Succeeded;
-        }
+        const auto &GetSucceeded() const { return Succeeded; }
 
-        const auto &GetFailed() const {
-            return Failed;
-        }
+        const auto &GetFailed() const { return Failed; }
 
-        const auto &GetDirections() const {
-            return Directions;
-        }
+        const auto &GetDirections() const { return Directions; }
 
-        const auto &GetHeight() const {
-            return Height;
-        }
+        const auto &GetHeight() const { return Height; }
 
-        const auto &GetWidth() const {
-            return Width;
-        }
+        const auto &GetWidth() const { return Width; }
 
-        const auto &GetFloorBits() const {
-            return FloorBits;
-        }
+        const auto &GetFloorBits() const { return FloorBits; }
 
-        const auto &GetFinished() const {
-            return Finished;
-        }
+        const auto &GetFinished() const { return Finished; }
 
-        const auto &GetState() const {
-            return State;
-        }
+        const auto &GetState() const { return State; }
 
-        const auto &GetTimeElapsed() const {
-            return TimeElapsed;
-        }
+        const auto &GetTimeElapsed() const { return TimeElapsed; }
 
-        const auto &GetPlayerPos0() const {
-            return PlayerPos0;
-        }
+        const auto &GetPlayerPos0() const { return PlayerPos0; }
 
-        const auto &GetPlayerPos() const {
-            return PlayerPos;
-        }
+        const auto &GetPlayerPos() const { return PlayerPos; }
 
-        const auto &GetBoxPos0() const {
-            return BoxPos0;
-        }
+        const auto &GetBoxPos0() const { return BoxPos0; }
 
-        const auto &GetBoxPos() const {
-            return BoxPos;
-        }
+        const auto &GetBoxPos() const { return BoxPos; }
 
-        const auto &GetGoalPos() const {
-            return GoalPos;
-        }
+        const auto &GetGoalPos() const { return GoalPos; }
 
-        const auto &GetMaze() const {
-            return Maze;
-        }
+        const auto &GetMaze() const { return Maze; }
 
-        const auto &GetFloorIndex() const {
-            return FloorIndex;
-        }
+        const auto &GetFloorIndex() const { return FloorIndex; }
 
-        const auto &GetStateHistory() const {
-            return StateHistory;
-        }
+        const auto &GetStateHistory() const { return StateHistory; }
 
-        std::string GetMazeString() const {
-            return MazeString();
-        }
+        std::string GetMazeString() const { return MazeString(); }
 
-        void Restart() {
-            DoRestart();
-        }
+        void Restart() { DoRestart(); }
 
-        bool Move(const DirectionInt &direction) {
-            return DoMove(direction);
-        }
+        bool Move(const DirectionInt &direction) { return DoMove(direction); }
 
         Game(std::string maze) {
             while (maze.size() && maze.front() == '\n')
                 maze.erase(maze.begin());
-            while (maze.size() && maze.back() == '\n')
-                maze.pop_back();
+            while (maze.size() && maze.back() == '\n') maze.pop_back();
             std::queue<Pos> floor;
             PlayerPos0 = {-1, -1};
             MazeInt line = 0;
@@ -393,7 +382,8 @@ namespace Sokoban {
                                 break;
                             case '*':
                                 floor.emplace(line, col);
-                                if (PlayerPos0.first + PlayerPos0.second >= 0) throw Error("Too Many Players");
+                                if (PlayerPos0.first + PlayerPos0.second >= 0)
+                                    throw Error("Too Many Players");
                                 PlayerPos0 = {line, col};
                                 break;
                             case '$':
@@ -406,7 +396,8 @@ namespace Sokoban {
                                 break;
                             case '+':
                                 floor.emplace(line, col);
-                                if (PlayerPos0.first + PlayerPos0.second >= 0) throw Error("Too Many Players");
+                                if (PlayerPos0.first + PlayerPos0.second >= 0)
+                                    throw Error("Too Many Players");
                                 PlayerPos0 = {line, col};
                                 GoalPos.emplace(line, col);
                                 break;
@@ -418,12 +409,16 @@ namespace Sokoban {
                         }
                 }
             }
-            if (PlayerPos0.first + PlayerPos0.second == -2) throw Error("No Player");
+            if (PlayerPos0.first + PlayerPos0.second == -2)
+                throw Error("No Player");
             if (BoxPos0.empty()) throw Error("No Box");
             if (BoxPos0.size() > GoalPos.size()) throw Error("Too Few Goals");
             FloorBits = 0;
-            for (SizeInt floor_remain = floor.size() - 1; floor_remain; floor_remain >>= 1) ++FloorBits;
-            if (FloorBits * (BoxPos0.size() + 1) > StateBits) throw Error("Maze Too Large");
+            for (SizeInt floor_remain = floor.size() - 1; floor_remain;
+                 floor_remain >>= 1)
+                ++FloorBits;
+            if (FloorBits * (BoxPos0.size() + 1) > StateBits)
+                throw Error("Maze Too Large");
             FloorIndex.resize(Height, std::vector<SizeInt>(Width, -1));
             SizeInt index = -1;
             while (!floor.empty()) {

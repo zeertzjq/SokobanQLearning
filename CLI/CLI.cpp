@@ -22,7 +22,8 @@
 #endif
 
 namespace {
-    void PrintOption(std::ostream &os, const std::string &option, const std::string &description) {
+    void PrintOption(std::ostream &os, const std::string &option,
+                     const std::string &description) {
         os << std::string(4, ' ') << std::left << std::setfill(' ');
         if (option.size() <= 18)
             os << std::setw(20) << option << description << std::endl;
@@ -50,9 +51,11 @@ namespace {
         DWORD dwConSize;
         GetConsoleScreenBufferInfo(hConsole, &csbi);
         dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
-        FillConsoleOutputCharacter(hConsole, ' ', dwConSize, coordScreen, &cCharsWritten);
+        FillConsoleOutputCharacter(hConsole, ' ', dwConSize, coordScreen,
+                                   &cCharsWritten);
         GetConsoleScreenBufferInfo(hConsole, &csbi);
-        FillConsoleOutputAttribute(hConsole, csbi.wAttributes, dwConSize, coordScreen, &cCharsWritten);
+        FillConsoleOutputAttribute(hConsole, csbi.wAttributes, dwConSize,
+                                   coordScreen, &cCharsWritten);
         SetConsoleCursorPosition(hConsole, coordScreen);
     }
 #endif
@@ -75,7 +78,8 @@ namespace {
     bool RunAlgorithm(std::string maze) {
         std::shared_ptr<Sokoban::Game<StateBits>> game_ptr;
         try {
-            game_ptr = std::make_shared<Sokoban::Game<StateBits>>(std::move(maze));
+            game_ptr =
+                std::make_shared<Sokoban::Game<StateBits>>(std::move(maze));
             maze.clear();
         } catch (const Sokoban::Error &err) {
             std::cerr << "Error: " << err.what() << std::endl;
@@ -83,19 +87,27 @@ namespace {
         }
         auto &game = *game_ptr;
         SokobanQLearning::PrintableQTable<RealType, StateBits> Q;
-        std::mt19937 random_engine(random_device ? std::random_device()() : std::chrono::system_clock::now().time_since_epoch().count());
+        std::mt19937 random_engine(
+            random_device
+                ? std::random_device()()
+                : std::chrono::system_clock::now().time_since_epoch().count());
         interrupted = false;
-        std::signal(SIGINT, [](int) -> void {
-            interrupted = true;
-        });
-        auto train = std::bind(SokobanQLearning::Train<decltype(random_engine), RealType, StateBits>, std::ref(random_engine), std::ref(game), std::ref(Q), 0.05, 0.5f, 1.0f, 1.0f, 0.5f, 50.0f, 1000.0f, 1000.0f);
+        std::signal(SIGINT, [](int) -> void { interrupted = true; });
+        auto train =
+            std::bind(SokobanQLearning::Train<decltype(random_engine), RealType,
+                                              StateBits>,
+                      std::ref(random_engine), std::ref(game), std::ref(Q),
+                      0.05, 0.5f, 1.0f, 1.0f, 0.5f, 50.0f, 1000.0f, 1000.0f);
         while (!interrupted && quiet-- > 1) train();
         if (interrupted) {
             std::cout << std::endl;
             if (print_Q_exit) Q.Print(std::clog, 4, 12);
             return true;
         }
-        SokobanQLearning::TrainResult<RealType, StateBits> train_result = quiet >= 0 ? train() : decltype(train_result){game.GetState(), Q.Get(game.GetState())};
+        SokobanQLearning::TrainResult<RealType, StateBits> train_result =
+            quiet >= 0 ? train()
+                       : decltype(train_result){game.GetState(),
+                                                Q.Get(game.GetState())};
         while (!interrupted) {
             ClearConsole();
             maze = game.GetMazeString();
@@ -105,8 +117,10 @@ namespace {
             std::cout << std::endl
                       << maze << std::endl
                       << std::endl
-                      << "Time: " << std::dec << game.GetTimeElapsed() << std::endl
-                      << "State: 0x" << Utils::BitsToHex(game.GetState()) << std::endl;
+                      << "Time: " << std::dec << game.GetTimeElapsed()
+                      << std::endl
+                      << "State: 0x" << Utils::BitsToHex(game.GetState())
+                      << std::endl;
             std::cout << std::endl;
             Q.PrintHeader(std::cout, 12);
             Q.PrintStateRow(std::cout, 4, 12, game.GetState());
@@ -131,7 +145,8 @@ namespace {
                     Q.Print(std::clog, 4, 12);
                 }
             }
-            if (sleep) std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
+            if (sleep)
+                std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
             train_result = train();
         }
         if (print_Q_exit) {
@@ -150,18 +165,32 @@ int main(int argc, char *argv[]) {
                       << std::endl
                       << "Options:" << std::endl;
             PrintOption(std::cout, "--help", "Print this help message");
-            PrintOption(std::cout, "--print-q", "Print the Q table on success, failure and exit");
-            PrintOption(std::cout, "--print-q-success", "Print the Q table on success");
-            PrintOption(std::cout, "--print-q-failure", "Print the Q table on failure");
-            PrintOption(std::cout, "--print-q-exit", "Print the Q table on exit");
-            PrintOption(std::cout, "--sleep=<num>", "Sleep for <num> milliseconds between two steps (default value is 100)");
-            PrintOption(std::cout, "--quiet=<num>", "Train for <num> steps before doing anything else (default value is 0)");
-            PrintOption(std::cout, "--random-device", "Obtain the random seed from the system random device instead of the system time (NOT GUARANTEED TO WORK)");
+            PrintOption(std::cout, "--print-q",
+                        "Print the Q table on success, failure and exit");
+            PrintOption(std::cout, "--print-q-success",
+                        "Print the Q table on success");
+            PrintOption(std::cout, "--print-q-failure",
+                        "Print the Q table on failure");
+            PrintOption(std::cout, "--print-q-exit",
+                        "Print the Q table on exit");
+            PrintOption(std::cout, "--sleep=<num>",
+                        "Sleep for <num> milliseconds between two steps "
+                        "(default value is 100)");
+            PrintOption(std::cout, "--quiet=<num>",
+                        "Train for <num> steps before doing anything else "
+                        "(default value is 0)");
+            PrintOption(std::cout, "--random-device",
+                        "Obtain the random seed from the system random device "
+                        "instead of the system time (NOT GUARANTEED TO WORK)");
 #ifdef SokobanQLearning_USE_EMOJI_
-            PrintOption(std::cout, "--emoji", "Using emoji symbols in output (NOT GUARANTEED TO WORK)");
+            PrintOption(
+                std::cout, "--emoji",
+                "Using emoji symbols in output (NOT GUARANTEED TO WORK)");
 #endif
 #ifdef SokobanQLearning_CLI_USE_WINAPI_
-            PrintOption(std::cout, "--ansi-escape", "Clear the console using ansi escape sequences instead of calling Windows APIs");
+            PrintOption(std::cout, "--ansi-escape",
+                        "Clear the console using ansi escape sequences instead "
+                        "of calling Windows APIs");
 #endif
             std::cout << std::endl;
             return 0;
@@ -204,5 +233,6 @@ int main(int argc, char *argv[]) {
     char c;
     std::string maze;
     while (std::cin >> std::noskipws >> c) maze += c;
-    return RunAlgorithm<float, 64>(std::move(maze)) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return RunAlgorithm<float, 64>(std::move(maze)) ? EXIT_SUCCESS
+                                                    : EXIT_FAILURE;
 }
